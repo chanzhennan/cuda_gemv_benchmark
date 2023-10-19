@@ -7,6 +7,8 @@ list(
   SOURCE_FILES
   MatrixMulCUDA0/naive.cc
   MatrixMulCUDA0/naive.cu
+  MatrixMulCUDA1/fastgemv.cc
+  MatrixMulCUDA1/fastgemv.cu
   )
 
 cuda_add_executable(cuda_benchmark ${SOURCE_FILES})

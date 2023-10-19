@@ -7,9 +7,34 @@
 #include <random>
 #include <vector>
 
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <cuda_fp16.h>
+
 #include "utils.h"
 
 namespace cudabm {
+
+template <typename T>
+__global__ void transposeMatrix(T* input, T* output, int src_m, int src_n) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (row >= src_m || col >= src_n)
+      return;    
+
+    output[col * src_m + row] = input[row * src_n + col];
+}
+
+template <typename T>
+void transpose(T* dsrc, T* ddst, int src_m, int src_n){
+    dim3 block(16, 16);
+    dim3 grid((src_m + 16 - 1) / 16, (src_n + 16 - 1) / 16);
+
+    transposeMatrix<T><<<grid, block>>>(dsrc, ddst, src_m, src_n);
+}
+
+
 
 std::string strFormatImp(const char* msg, va_list args) {
   // we might need a second shot at this, so pre-emptivly make a copy
@@ -149,5 +174,10 @@ int cublas_gemm_ex(cublasHandle_t handle, cublasOperation_t transA,
 
 template bool Equal<float>(const unsigned int n, const float* x, const float* y,
                            const float tolerance);
+
+template void transpose<float>(float* dsrc, float* ddst, int src_m, int src_n);
+
+template void transpose<half>(half* dsrc, half* ddst, int src_m, int src_n);
+
 
 }  // namespace cudabm

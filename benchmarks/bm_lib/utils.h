@@ -37,6 +37,9 @@ float Sum(float* vec, size_t len);
 
 void Gemm(float* dA, float* dB, float* dC, int m, int n, int k);
 
+template <typename T>
+void transpose(T* dsrc, T* ddst, int src_m, int src_n);
+
 template <typename Type>
 bool Equal(const unsigned int n, const Type* x, const Type* y,
            const Type tolerance);
