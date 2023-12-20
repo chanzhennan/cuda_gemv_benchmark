@@ -14,17 +14,20 @@
 #include "bm_lib/basegemv.h"
 
 template <typename T>
-class Blocker : public BaseGemv {
+class FastGemv : public BaseGemv<T> {
+  using BaseGemv<T>::getDeviceA;
+  using BaseGemv<T>::getDeviceB;
+  using BaseGemv<T>::getDeviceC;
+
  public:
   void callKernel(benchmark::State &state) override {
-    GEMV1(BaseGemv::getDeviceA(), BaseGemv::getDeviceB(),
-                     BaseGemv::getDeviceC(), state.range(0), state.range(1),
-                     state.range(2));
+    GEMV1<T>(getDeviceA(), getDeviceB(), getDeviceC(), state.range(0),
+             state.range(1), state.range(2));
   }
 };
 
 #define BENCHMARK_GEMM1_OP(name, dType)                                      \
-  BENCHMARK_TEMPLATE_DEFINE_F(Blocker, name, dType)                          \
+  BENCHMARK_TEMPLATE_DEFINE_F(FastGemv, name, dType)                         \
   (benchmark::State & st) {                                                  \
     for (auto _ : st) {                                                      \
       callKernel(st);                                                        \
@@ -34,10 +37,10 @@ class Blocker : public BaseGemv {
     st.counters["TFlops"] = benchmark::Counter((getFlops(st) * iter / 1e12), \
                                                benchmark::Counter::kIsRate); \
   }                                                                          \
-  BENCHMARK_REGISTER_F(Blocker, name)                                        \
+  BENCHMARK_REGISTER_F(FastGemv, name)                                       \
       ->Unit(benchmark::kMillisecond)                                        \
       ->ArgsProduct({{1}, {4096, 11008}, {4096, 11008}});
 
 #define BENCHMARK_GEMM1_OP_TYPE(dType) BENCHMARK_GEMM1_OP(Gemm_##dType, dType)
 
-BENCHMARK_GEMM1_OP_TYPE(float)
+BENCHMARK_GEMM1_OP_TYPE(half)

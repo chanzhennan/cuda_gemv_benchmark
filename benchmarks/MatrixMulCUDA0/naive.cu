@@ -10,7 +10,6 @@ __global__ void gemv_kernel(T *A, T *B, T *C, int m, int n, int k) {
 
   int x = tid % m;
   int y = tid / m;
-
   if (x < m && y < n) {
     // Compute dot product of row of A and column of B
     T value = 0;
@@ -32,3 +31,6 @@ void GEMV0(T *dA, T *dB, T *dC, int m, int n, int k) {
 
 template void GEMV0<TPB, float>(float *dA, float *dB, float *dC, int m, int n,
                                 int k);
+
+template void GEMV0<TPB, half>(half *dA, half *dB, half *dC, int m, int n,
+                               int k);

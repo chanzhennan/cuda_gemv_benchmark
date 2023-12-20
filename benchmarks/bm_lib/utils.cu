@@ -1,4 +1,8 @@
 // Copyright (c) 2023 Zhennanc Ltd. All rights reserved.
+#include <cuda_fp16.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
 #include <algorithm>
 #include <array>
 #include <cstdarg>
@@ -7,34 +11,27 @@
 #include <random>
 #include <vector>
 
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
-#include <cuda_fp16.h>
-
 #include "utils.h"
 
 namespace cudabm {
 
 template <typename T>
 __global__ void transposeMatrix(T* input, T* output, int src_m, int src_n) {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
+  int col = blockIdx.x * blockDim.x + threadIdx.x;
+  int row = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (row >= src_m || col >= src_n)
-      return;    
+  if (row >= src_m || col >= src_n) return;
 
-    output[col * src_m + row] = input[row * src_n + col];
+  output[col * src_m + row] = input[row * src_n + col];
 }
 
 template <typename T>
-void transpose(T* dsrc, T* ddst, int src_m, int src_n){
-    dim3 block(16, 16);
-    dim3 grid((src_m + 16 - 1) / 16, (src_n + 16 - 1) / 16);
+void transpose(T* dsrc, T* ddst, int src_m, int src_n) {
+  dim3 block(16, 16);
+  dim3 grid((src_m + 16 - 1) / 16, (src_n + 16 - 1) / 16);
 
-    transposeMatrix<T><<<grid, block>>>(dsrc, ddst, src_m, src_n);
+  transposeMatrix<T><<<grid, block>>>(dsrc, ddst, src_m, src_n);
 }
-
-
 
 std::string strFormatImp(const char* msg, va_list args) {
   // we might need a second shot at this, so pre-emptivly make a copy
@@ -89,13 +86,15 @@ void genRandom(float* vec, unsigned long len) {
   }
 }
 
-void genOnes(float* vec, unsigned long len) {
+template <typename T>
+void genOnes(T* vec, unsigned long len) {
   for (unsigned long i = 0; i < len; i++) {
     vec[i] = 1.f;
   }
 }
 
-void Print(float* vec, size_t len) {
+template <typename T>
+void Print(T* vec, size_t len) {
   for (int i = 0; i < len; i++) {
     printf("%f ", vec[i]);
     if (i % 10 == 0) {
@@ -112,21 +111,22 @@ float Sum(float* vec, size_t len) {
   return sum;
 }
 
-void Gemm(float* dA, float* dB, float* dC, int m, int n, int k) {
+template <typename T>
+void Gemm(T* dA, T* dB, T* dC, int m, int n, int k) {
   float alpha = 1.0f;
   float beta = 0.0f;
 
   cublasHandle_t blas_handle;
   cublasCreate(&blas_handle);
 
-  // if (status != CUBLAS_STATUS_SUCCESS)
-  //   std::runtime_error("!!!! CUBLAS initialization error\n");
-
   // C = A X B
-  cublasSgemm(blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, &alpha, dB, n, dA,
-              k, &beta, dC, n);
+  // cublasSgemm(blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, &alpha, dB, n,
+  // dA,
+  //             k, &beta, dC, n);
+  cublas_gemm_ex<T, float>(blas_handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, dA,
+                           dB, dC, n, k, n, &alpha, &beta, 0);
+
   cublasDestroy(blas_handle);
-  // cudaDeviceSynchronize();
 }
 
 // Equal
@@ -148,7 +148,7 @@ bool Equal(const unsigned int n, const Type* x, const Type* y,
 template <typename T, typename S>
 int cublas_gemm_ex(cublasHandle_t handle, cublasOperation_t transA,
                    cublasOperation_t transB, int m, int n, int k, T* A, T* B,
-                   S* C, int lda, int ldb, int ldc, S* alpha, S* beta,
+                   T* C, int lda, int ldb, int ldc, S* alpha, S* beta,
                    int algo) {
   cudaDataType_t AType, BType, CType, ComputeType;
   if (std::is_same<T, float>::value) {
@@ -176,8 +176,12 @@ template bool Equal<float>(const unsigned int n, const float* x, const float* y,
                            const float tolerance);
 
 template void transpose<float>(float* dsrc, float* ddst, int src_m, int src_n);
-
 template void transpose<half>(half* dsrc, half* ddst, int src_m, int src_n);
 
+template void Gemm<float>(float* dA, float* dB, float* dC, int m, int n, int k);
+template void Gemm<half>(half* dA, half* dB, half* dC, int m, int n, int k);
+
+template void genOnes<float>(float* vec, unsigned long len);
+template void genOnes<half>(half* vec, unsigned long len);
 
 }  // namespace cudabm

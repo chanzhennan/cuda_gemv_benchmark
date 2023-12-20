@@ -14,12 +14,15 @@
 #include "bm_lib/basegemv.h"
 
 template <typename T>
-class Naive : public BaseGemv {
+class Naive : public BaseGemv<T> {
+  using BaseGemv<T>::getDeviceA;
+  using BaseGemv<T>::getDeviceB;
+  using BaseGemv<T>::getDeviceC;
+
  public:
   void callKernel(benchmark::State &state) override {
-    GEMV0<TPB>(BaseGemv::getDeviceA(), BaseGemv::getDeviceB(),
-               BaseGemv::getDeviceC(), state.range(0), state.range(1),
-               state.range(2));
+    GEMV0<TPB, T>(getDeviceA(), getDeviceB(), getDeviceC(), state.range(0),
+                  state.range(1), state.range(2));
   }
 };
 
@@ -40,4 +43,4 @@ class Naive : public BaseGemv {
 
 #define BENCHMARK_GEMV0_OP_TYPE(dType) BENCHMARK_GEMV0_OP(Gemm_##dType, dType)
 
-BENCHMARK_GEMV0_OP_TYPE(float)
+BENCHMARK_GEMV0_OP_TYPE(half)
