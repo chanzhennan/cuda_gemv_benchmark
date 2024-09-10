@@ -78,7 +78,7 @@ template <typename T>
 void BaseGemv<T>::verify(const ::benchmark::State &st) {
   // for test M, N, K = state.range(0)
   cudabm::Gemm<T>(dA, dB, testC, st.range(0), st.range(1), st.range(2));
-  // cudabm::Equal<T>(st.range(0) * st.range(1), dC, testC, 1e-2);
+  cudabm::Equal<T>(st.range(0) * st.range(1), dC, testC, 1e-2);
 }
 
 template <typename T>

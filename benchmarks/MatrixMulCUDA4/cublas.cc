@@ -36,9 +36,9 @@ class Cublas : public BaseGemv<T> {
   }                                                                          \
   BENCHMARK_REGISTER_F(Cublas, name)                                         \
       ->Unit(benchmark::kMillisecond)                                        \
-      ->ArgsProduct({{1}, {4096}, {1000, 1000}});
+      ->ArgsProduct({{1}, {4096, 11008}, {4096, 11008}});
 
 #define BENCHMARK_GEMV4_OP_TYPE(dType) BENCHMARK_GEMV4_OP(Gemv_##dType, dType)
 
 BENCHMARK_GEMV4_OP_TYPE(half)
-BENCHMARK_GEMV4_OP_TYPE(float)
+// BENCHMARK_GEMV4_OP_TYPE(float)

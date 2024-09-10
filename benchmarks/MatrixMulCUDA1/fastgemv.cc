@@ -32,6 +32,7 @@ class FastGemv : public BaseGemv<T> {
     for (auto _ : st) {                                                      \
       callKernel(st);                                                        \
     }                                                                        \
+    verify(st);                                                              \
     double iter = st.iterations();                                           \
     st.counters["operation"] = getFlops(st) * iter;                          \
     st.counters["TFlops"] = benchmark::Counter((getFlops(st) * iter / 1e12), \

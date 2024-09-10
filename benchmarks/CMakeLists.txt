@@ -13,7 +13,8 @@ list(
   MatrixMulCUDA0/naive.cc
   MatrixMulCUDA0/naive.cu
   MatrixMulCUDA4/cublas.cc
-  # MatrixMulCUDA1/fastgemv.cc MatrixMulCUDA1/fastgemv.cu
+  MatrixMulCUDA1/fastgemv.cc
+  MatrixMulCUDA1/fastgemv.cu
   # MatrixMulCUDA3/fastgemv_inst.cc MatrixMulCUDA3/fastgemv_inst.cu
 )
 
