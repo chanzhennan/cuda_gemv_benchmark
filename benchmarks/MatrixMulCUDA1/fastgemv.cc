@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "bm_lib/basegemv.h"
+#include "bm_base/basegemv.h"
 
 template <typename T>
 class FastGemv : public BaseGemv<T> {
@@ -26,7 +26,7 @@ class FastGemv : public BaseGemv<T> {
   }
 };
 
-#define BENCHMARK_GEMM1_OP(name, dType)                                      \
+#define BENCHMARK_GEMV1_OP(name, dType)                                      \
   BENCHMARK_TEMPLATE_DEFINE_F(FastGemv, name, dType)                         \
   (benchmark::State & st) {                                                  \
     for (auto _ : st) {                                                      \
@@ -41,6 +41,6 @@ class FastGemv : public BaseGemv<T> {
       ->Unit(benchmark::kMillisecond)                                        \
       ->ArgsProduct({{1}, {4096, 11008}, {4096, 11008}});
 
-#define BENCHMARK_GEMM1_OP_TYPE(dType) BENCHMARK_GEMM1_OP(Gemm_##dType, dType)
+#define BENCHMARK_GEMV1_OP_TYPE(dType) BENCHMARK_GEMV1_OP(Gemv_##dType, dType)
 
-BENCHMARK_GEMM1_OP_TYPE(half)
+BENCHMARK_GEMV1_OP_TYPE(half)

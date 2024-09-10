@@ -1,4 +1,4 @@
-#include "MatrixMulCUDA1/fastgemv.cuh"
+#include "MatrixMulCUDA3/fastgemv_inst.cuh"
 
 __device__ __forceinline__ float warpReduceSum(float sum,
                                                unsigned int threadNum) {
@@ -17,8 +17,8 @@ __device__ __forceinline__ float warpReduceSum(float sum,
 
 // thread_per_block = blockDim.x
 // blockDim.y <= SHARED_MEM_MAX_ROWS
-__global__ void fastgemv(half* mat, half* vec, half* res, unsigned int n,
-                         unsigned int k, unsigned int num_per_thread) {
+__global__ void fastgemv_inst(half* mat, half* vec, half* res, unsigned int n,
+                              unsigned int k, unsigned int num_per_thread) {
   float sum = 0;
   // each thread load num_per_thread elements from global
   unsigned int tid = threadIdx.x;
@@ -104,7 +104,7 @@ __global__ void fastgemv(half* mat, half* vec, half* res, unsigned int n,
 }
 
 template <typename T>
-void GEMV1(T* dVecTrans, T* dMatTrans, T* dResTrans, int m, int n, int k) {
+void GEMV3(T* dVecTrans, T* dMatTrans, T* dResTrans, int m, int n, int k) {
   int mat_height_ = n;
   int vec_height_ = k;
 
@@ -115,9 +115,10 @@ void GEMV1(T* dVecTrans, T* dMatTrans, T* dResTrans, int m, int n, int k) {
   dim3 grid_dim(1, (mat_height_ + block_dim_y - 1) / block_dim_y);
   dim3 block_dim(block_dim_x, block_dim_y);
 
-  fastgemv<<<grid_dim, block_dim>>>(dMatTrans, dVecTrans, dResTrans,
-                                    vec_height_, mat_height_, num_per_thread);
+  fastgemv_inst<<<grid_dim, block_dim>>>(dMatTrans, dVecTrans, dResTrans,
+                                         vec_height_, mat_height_,
+                                         num_per_thread);
 }
 
-template void GEMV1<half>(half* dVecTrans, half* dMatTrans, half* dResTrans,
+template void GEMV3<half>(half* dVecTrans, half* dMatTrans, half* dResTrans,
                           int m, int n, int k);

@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "utils.h"
+#include "bmlib/utils.h"
 
 template <typename T>
 class BaseGemv : public benchmark::Fixture {

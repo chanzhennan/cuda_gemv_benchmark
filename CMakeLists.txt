@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(
-  cuda_gemm_benchmark
-  DESCRIPTION "gemm benchmark"
+  cuda_gemv_benchmark
+  DESCRIPTION "gemv benchmark"
   LANGUAGES CXX)
 
 if(NOT DEFINED CUDA_ARCH)
@@ -64,5 +64,8 @@ include_directories(${googlebenchmark_BINARY_DIR}/include)
 include_directories(${googlebenchmark_SOURCE_DIR}/include)
 
 include_directories(benchmarks)
+
+add_subdirectory(3rdparty/bmlib)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/)
 
 add_subdirectory(benchmarks)

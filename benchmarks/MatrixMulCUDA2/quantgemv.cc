@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "MatrixMulCUDA1/fastgemv.cuh"
-#include "bm_lib/basegemv.h"
+#include "bm_base/basegemv.h"
 
 template <typename T>
 class QuantGemv : public BaseGemv<T> {
@@ -25,7 +25,7 @@ class QuantGemv : public BaseGemv<T> {
   }
 };
 
-#define BENCHMARK_GEMM2_OP(name, dType)                                      \
+#define BENCHMARK_GEMV2_OP(name, dType)                                      \
   BENCHMARK_TEMPLATE_DEFINE_F(QuantGemv, name, dType)                        \
   (benchmark::State & st) {                                                  \
     for (auto _ : st) {                                                      \
@@ -40,6 +40,6 @@ class QuantGemv : public BaseGemv<T> {
       ->Unit(benchmark::kMillisecond)                                        \
       ->ArgsProduct({{1}, {4096, 11008}, {4096, 11008}});
 
-#define BENCHMARK_GEMM2_OP_TYPE(dType) BENCHMARK_GEMM2_OP(Gemm_##dType, dType)
+#define BENCHMARK_GEMV2_OP_TYPE(dType) BENCHMARK_GEMV2_OP(Gemv_##dType, dType)
 
-BENCHMARK_GEMM2_OP_TYPE(half)
+BENCHMARK_GEMV2_OP_TYPE(half)

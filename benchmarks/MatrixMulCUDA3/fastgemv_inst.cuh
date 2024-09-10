@@ -10,4 +10,4 @@
 #define MAX_THREADS_PER_BLOCK 1024
 
 template <typename T>
-void GEMV2(T *dVecTrans, T *dMatTrans, T *dResTrans, int m, int n, int k);
+void GEMV3(T *dVecTrans, T *dMatTrans, T *dResTrans, int m, int n, int k);

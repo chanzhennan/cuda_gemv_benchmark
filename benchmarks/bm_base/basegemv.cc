@@ -11,16 +11,33 @@ void BaseGemv<T>::SetUp(const ::benchmark::State &state) {
   unsigned long M = (unsigned long)state.range(0);
   unsigned long N = (unsigned long)state.range(1);
   unsigned long K = (unsigned long)state.range(2);
+
   unsigned long asize = M * K;
   unsigned long bsize = K * N;
   unsigned long csize = M * N;
 
-  cudaMallocManaged(&dA, sizeof(T) * asize);
-  cudaMallocManaged(&dB, sizeof(T) * bsize);
-  cudaMallocManaged(&dC, sizeof(T) * csize);
-  cudaMallocManaged(&testC, sizeof(T) * csize);
-
-  genData(state);
+  // Free any previously allocated memory
+  cudaError_t err;
+  err = cudaMallocManaged(&dA, sizeof(T) * asize);
+  if (err != cudaSuccess) {
+    throw std::runtime_error("Failed to allocate dA: " +
+                             std::string(cudaGetErrorString(err)));
+  }
+  err = cudaMallocManaged(&dB, sizeof(T) * bsize);
+  if (err != cudaSuccess) {
+    throw std::runtime_error("Failed to allocate dB: " +
+                             std::string(cudaGetErrorString(err)));
+  }
+  err = cudaMallocManaged(&dC, sizeof(T) * csize);
+  if (err != cudaSuccess) {
+    throw std::runtime_error("Failed to allocate dC: " +
+                             std::string(cudaGetErrorString(err)));
+  }
+  err = cudaMallocManaged(&testC, sizeof(T) * csize);
+  if (err != cudaSuccess) {
+    throw std::runtime_error("Failed to allocate testC: " +
+                             std::string(cudaGetErrorString(err)));
+  }
 }
 
 template <typename T>
@@ -31,8 +48,10 @@ void BaseGemv<T>::genData(const ::benchmark::State &st) {
   unsigned long asize = M * K;
   unsigned long bsize = K * N;
 
-  cudabm::genOnes<T>(dA, asize);
-  cudabm::genOnes<T>(dB, bsize);
+  printf("%ld %ld %ld\n", M, N, K);
+
+  cudabm::Ones<T>(dA, asize);
+  cudabm::Ones<T>(dB, bsize);
 }
 
 template <typename T>
@@ -58,11 +77,10 @@ T *BaseGemv<T>::getDeviceTestC() {
 template <typename T>
 void BaseGemv<T>::verify(const ::benchmark::State &st) {
   // for test M, N, K = state.range(0)
-
   cudabm::Gemm<T>(dA, dB, testC, st.range(0), st.range(1), st.range(2));
-  // if (!cudabm::Equal<T>(st.range(0) * st.range(1), dC, testC, 1e-2))
-  //   throw std::runtime_error("Value diff occur in Dense");
+  // cudabm::Equal<T>(st.range(0) * st.range(1), dC, testC, 1e-2);
 }
+
 template <typename T>
 void BaseGemv<T>::TearDown(const ::benchmark::State &st) {
   cudaFree(dA);
